@@ -102,7 +102,7 @@ byte getWhitePart(int ledNum) {
     result = map(x, maxBrightnessOffsetX, minBrightnessOffsetX, maxBrightness, 0);
   }
   
-  return result;
+  return lightLog(result);
 }
 
 byte getRedPart(int ledNum) {
@@ -139,10 +139,19 @@ byte getRedPart(int ledNum) {
     result = map(x, maxBrightnessHighOffsetX, minBrightnessHighOffsetX, maxBrightness, 0);
   }
 
-  Serial.print(result);
+  Serial.print(lightLog(result));
   Serial.print(" ");
 
-  return result;
+  return lightLog(result);
+}
+
+byte lightLog(byte linear) {
+  //  return (log(256) / log(linear)) * 256;
+  // http://en.wikipedia.org/wiki/Stevens_power_law
+  float a = 0.6; // 0.33 - 0.5
+  float Pmax = pow(255, a);
+  return pow(Pmax * ((float)linear/(float)256), 1/a) + 0.5;
+  // alternative http://en.wikipedia.org/wiki/Weber-Fechner_law
 }
 
 ////////////////////////////////////////////////////////////////////////////////
