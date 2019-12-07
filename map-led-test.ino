@@ -146,11 +146,11 @@ byte getRedPart(int ledNum) {
 }
 
 byte lightLog(byte linear) {
-  //  return (log(256) / log(linear)) * 256;
   // http://en.wikipedia.org/wiki/Stevens_power_law
   float a = 0.6; // 0.33 - 0.5
-  float Pmax = pow(255, a);
-  return pow(Pmax * ((float)linear/(float)256), 1/a) + 0.5;
+  int maxVal = 255;
+  float Pmax = pow(maxVal, a);
+  return pow(Pmax * ((float)linear/(float)(maxVal + 1)), 1/a) + 0.5;
   // alternative http://en.wikipedia.org/wiki/Weber-Fechner_law
 }
 
