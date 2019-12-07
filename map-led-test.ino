@@ -61,53 +61,88 @@ void updateColors(char r, char g, char b, char w)
   }
 }
 
-void updateBar(int brightness, int length)
+void updateBar()
 {
-  int redWidth = 100;
-  int pointsPerPixel = 100;
-  
   for(int i = 0; i < numPixels; i++)
   {
-    if (length < 0) {
       pixels[i].r = 0;
-      pixels[i].g = 0;
+      pixels[i].g = getRedPart(i);
       pixels[i].b = 0;
-      pixels[i].w = 0;
-      continue;
-    }
-
-    if (length > redWidth + pointsPerPixel) {
-      pixels[i].r = 0;
-      pixels[i].g = 0;
-      pixels[i].b = 0;
-      pixels[i].w = brightness;
-      
-    } else if (length <= redWidth) {
-      pixels[i].r = 0;
-      pixels[i].g = map(length, 0, redWidth, 0, brightness);
-      pixels[i].b = 0;
-      pixels[i].w = 0;
-      Serial.print(i);
-      Serial.print(": ");
-      Serial.print(pixels[i].g);
-      Serial.print(" ");
-      
-    } else {
-      byte val = map(length - redWidth, 0, redWidth, 0, brightness);
-      pixels[i].r = 0;
-      pixels[i].g = brightness - val;
-      pixels[i].b = 0;
-      pixels[i].w = val;
-      Serial.print(i);
-      Serial.print(": ");
-      Serial.print(pixels[i].w);
-      Serial.print(" ");
-    }
-
-    length -= pointsPerPixel;
-
+      pixels[i].w = getWhitePart(i);
   }
   Serial.println();
+}
+
+byte getWhitePart(int ledNum) {
+  byte ledWidth = 255;
+  int maxTerminatorValue = 1000;
+//  byte maxBr/ightness = maxBrightness;
+  
+  byte totalLeds = numPixels;
+
+  int maxX = ledWidth * totalLeds;
+  int x = ledNum * ledWidth;
+
+  int terminatorX = map(length, 0, maxTerminatorValue, 0, maxX);
+
+  int maxBrightnessOffset = - ledWidth * 1; // offset from terminator pos (90 degrees for spere)
+  int minBrightnessOffset = ledWidth * 0; 
+
+  int maxBrightnessOffsetX = terminatorX + maxBrightnessOffset;
+  int minBrightnessOffsetX = terminatorX + minBrightnessOffset;
+
+  byte result;
+  if (x <= maxBrightnessOffsetX) {
+    result = maxBrightness;
+  }
+  else if (x > minBrightnessOffsetX) {
+    result = 0;
+  } else {
+    // linear
+    result = map(x, maxBrightnessOffsetX, minBrightnessOffsetX, maxBrightness, 0);
+  }
+  
+  return result;
+}
+
+byte getRedPart(int ledNum) {
+  byte ledWidth = 255;
+  int maxTerminatorValue = 1000;
+//  byte maxBrightness = maxBrightness;
+  
+  byte totalLeds = numPixels;
+
+  int maxX = ledWidth * totalLeds;
+  int x = ledNum * ledWidth;
+
+  int terminatorX = map(length, 0, maxTerminatorValue, 0, maxX);
+
+  int minBrightnessLowOffset = - ledWidth * 1.5; // offset from terminator pos (90 degrees for spere)
+  int maxBrightnessLowOffset = - ledWidth * 0.5; 
+  int maxBrightnessHighOffset = ledWidth * 0.5; // offset from terminator pos (90 degrees for spere)
+  int minBrightnessHighOffset = ledWidth * 1.5;
+
+  int minBrightnessLowOffsetX = terminatorX + minBrightnessLowOffset;
+  int maxBrightnessLowOffsetX = terminatorX + maxBrightnessLowOffset;
+  int maxBrightnessHighOffsetX = terminatorX + maxBrightnessHighOffset;
+  int minBrightnessHighOffsetX = terminatorX + minBrightnessHighOffset;
+
+  byte result;
+  if (x <= minBrightnessLowOffsetX || x > minBrightnessHighOffsetX) {
+    result = 0;
+  } else if (x > maxBrightnessLowOffsetX && x <= maxBrightnessHighOffsetX) {
+    result = maxBrightness;
+  } else if (x > minBrightnessLowOffsetX && x <= maxBrightnessLowOffsetX) {
+    result = map(x, minBrightnessLowOffsetX, maxBrightnessLowOffsetX, 0, maxBrightness);
+  } else {
+    // if (x > maxBrightnessHighOffsetX && x <= minBrightnessHighOffsetX)
+    result = map(x, maxBrightnessHighOffsetX, minBrightnessHighOffsetX, maxBrightness, 0);
+  }
+
+  Serial.print(result);
+  Serial.print(" ");
+
+  return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +151,7 @@ void updateBar(int brightness, int length)
 void setup()
 {
   // Turn off the LEDs
-  strip.clear(2 * numPixels);
+  //strip.clear(2 * numPixels);
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
@@ -136,9 +171,9 @@ void setup()
 void loop()
 {
   maxBrightness = map(analogRead(brightnessPin), 0, 1023, 0, 255);
-  length = map(analogRead(lengthPin), 0, 1023, 0, 1000);
+  length = map(analogRead(lengthPin), 0, 1023, -255, 1000);
 
-  updateBar(maxBrightness, length);
+  updateBar();
   strip.sendPixels(numPixels, pixels);
   
 
