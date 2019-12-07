@@ -146,6 +146,7 @@ byte getRedPart(int ledNum) {
 }
 
 byte lightLog(byte linear) {
+  // https://forum.arduino.cc/index.php?topic=147818.msg1113233#msg1113233
   // http://en.wikipedia.org/wiki/Stevens_power_law
   float a = 0.6; // 0.33 - 0.5
   int maxVal = 255;
